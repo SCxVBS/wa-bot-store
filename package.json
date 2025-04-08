@@ -1,0 +1,35 @@
+{
+    "name": "scxvbs",
+    "version": "1.0.0",
+    "description": "WhatsApp Bot dengan fitur lengkap untuk kebutuhan grup dan bisnis",
+    "main": "index.js",
+    "scripts": {
+      "start": "node index.js",
+      "dev": "nodemon index.js"
+    },
+    "keywords": [
+      "whatsapp-bot",
+      "baileys",
+      "bot-wa"
+    ],
+    "author": "Varen Shino",
+    "license": "MIT",
+    "dependencies": {
+      "@whiskeysockets/baileys": "^6.5.0",
+      "@hapi/boom": "^10.0.0",
+      "awesome-phonenumber": "^5.0.0",
+      "axios": "^1.3.4",
+      "chalk": "^4.1.2",
+      "file-type": "^16.5.3",
+      "figlet": "^1.5.2",
+      "fluent-ffmpeg": "^2.1.2",
+      "moment-timezone": "^0.5.43",
+      "node-webpmux": "^3.1.7",
+      "pino": "^8.11.0",
+      "qrcode-terminal": "^0.12.0",
+      "sharp": "^0.32.6"
+    },
+    "devDependencies": {
+      "nodemon": "^2.0.22"
+    }
+  }
