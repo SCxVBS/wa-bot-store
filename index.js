@@ -29,7 +29,7 @@ const config = {
     numberWithoutPrefix: '0895413202421', // Format 0xxx
   },
   prefix: '.', // Prefix untuk perintah, tapi bot juga mendukung tanpa prefix
-  logoUrl: 'https://deposit.pictures/p/273e2ce806b44d66831401d19f66a016',
+  logoPath: path.join(__dirname, 'assets', 'images', 'logo.jpg'), // Path lokal untuk logo
   sessionName: 'SCxVBS-session',
 };
 
@@ -46,10 +46,16 @@ const TEMP_DIR = './temp';
   }
 });
 
+// Pastikan folder assets/images ada
+const ASSETS_DIR = path.join(__dirname, 'assets', 'images');
+if (!fs.existsSync(ASSETS_DIR)) {
+  fs.mkdirSync(ASSETS_DIR, { recursive: true });
+}
+
 // Database sederhana untuk list
 const LIST_DB_PATH = path.join(DATA_DIR, 'list_db.json');
 // Database untuk pengaturan grup
-const GROUP_SETTINGS_PATH = path.join(DATA_DIR, 'group_settings.json');
+const GROUP_SETTINGS_PATH = path.join(DATA_DIR, 'group_settings intermediates.json');
 
 // Inisialisasi database jika belum ada
 if (!fs.existsSync(LIST_DB_PATH)) {
@@ -1072,9 +1078,14 @@ const messageHandler = async (sock, msg) => {
       case 'menu':
         {
           try {
-            // Kirim logo bot
+            // Menggunakan file lokal untuk logo
+            const logoPath = config.logoPath;
+            if (!fs.existsSync(logoPath)) {
+              throw new Error('File logo tidak ditemukan di ' + logoPath);
+            }
+
             await sock.sendMessage(sender, {
-              image: { url: config.logoUrl },
+              image: fs.readFileSync(logoPath), // Membaca file lokal
               caption: `
 🤖 *${config.name} MENU* 🤖
 
@@ -1136,9 +1147,68 @@ Contoh: .menu atau menu
               `
             }, { quoted: msg });
           } catch (error) {
-            logger.error('Gagal menampilkan menu:', error);
+            logger.error('Gagal menampilkan menu dengan logo:', error);
+            // Fallback jika gambar gagal dimuat
             await sock.sendMessage(sender, {
-              text: `❌ *GAGAL MENAMPILKAN MENU*\n\nTerjadi kesalahan saat menampilkan menu.`
+              text: `
+🤖 *${config.name} MENU* 🤖
+
+👨‍💻 *Owner Bot:* ${config.owner.name}
+📱 *Nomor Owner:* ${config.owner.numberWithoutPrefix}
+
+*DAFTAR PERINTAH:*
+
+👤 *owner*
+- Menampilkan biodata owner bot
+
+📝 *addlist* _nama|isi_
+- Menambahkan list ke database (Admin/Owner)
+
+📋 *list*
+- Menampilkan semua list yang tersimpan
+
+🗑️ *dellist* _nama_
+- Menghapus list dari database (Admin/Owner)
+
+✏️ *updatelist* _nama|isi_baru_
+- Mengupdate isi list yang ada (Admin/Owner)
+
+📝 *renamelist* _nama_lama|nama_baru_
+- Mengganti nama list (Admin/Owner)
+
+🔗 *antilink* _on/off_
+- Mengaktifkan/menonaktifkan anti-link (Admin/Owner)
+
+➕ *add* _nomor_
+- Menambahkan member ke grup (Admin/Owner)
+
+📢 *h* atau *hidetag* _pesan_
+- Mengirim pesan mention ke semua member (Admin/Owner)
+
+⛔ *kick* _@tag_
+- Mengeluarkan member dari grup (Admin/Owner)
+
+🖼️ *s* atau *stiker*
+- Membuat stiker dari gambar/video
+
+🔗 *linkgc*
+- Menampilkan link invite grup
+
+🔓 *open*
+- Membuka grup agar semua member bisa chat (Admin/Owner)
+
+🔒 *close*
+- Menutup grup agar hanya admin bisa chat (Admin/Owner)
+
+📜 *menu*
+- Menampilkan daftar perintah bot
+
+*NOTE:*
+Semua perintah bisa digunakan dengan atau tanpa prefix "."
+Contoh: .menu atau menu
+
+© 2025 ${config.name} - Dibuat dengan ❤️ oleh ${config.owner.name}
+              `
             }, { quoted: msg });
           }
         }
