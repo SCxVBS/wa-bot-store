@@ -360,21 +360,46 @@ const messageHandler = async (sock, msg) => {
   if (!isCmd) {
     try {
       const listDb = loadListDb();
-      if (isGroupMsg && listDb[sender] && listDb[sender][command]) {
-        const listItem = listDb[sender][command];
-        
-        // Jika list memiliki gambar
-        if (listItem.image && fs.existsSync(listItem.image)) {
-          await sock.sendMessage(sender, {
-            image: { url: listItem.image },
-            caption: listItem.content,
-            mimetype: 'image/jpeg'
-          }, { quoted: msg });
-        } else {
-          await sock.sendMessage(sender, { text: listItem.content }, { quoted: msg });
+      
+      // Coba cek apakah input tepat sama dengan nama list (untuk list dengan spasi)
+      const userInput = body.trim().toLowerCase();
+      
+      if (isGroupMsg && listDb[sender]) {
+        // Cek dulu apakah ada list yang tepat sama dengan seluruh input user
+        if (listDb[sender][userInput]) {
+          const listItem = listDb[sender][userInput];
+          
+          // Jika list memiliki gambar
+          if (listItem.image && fs.existsSync(listItem.image)) {
+            await sock.sendMessage(sender, {
+              image: { url: listItem.image },
+              caption: listItem.content,
+              mimetype: 'image/jpeg'
+            }, { quoted: msg });
+          } else {
+            await sock.sendMessage(sender, { text: listItem.content }, { quoted: msg });
+          }
+          
+          return;
         }
         
-        return;
+        // Jika tidak ada yang tepat sama, coba dengan command (kata pertama saja)
+        if (listDb[sender][command]) {
+          const listItem = listDb[sender][command];
+          
+          // Jika list memiliki gambar
+          if (listItem.image && fs.existsSync(listItem.image)) {
+            await sock.sendMessage(sender, {
+              image: { url: listItem.image },
+              caption: listItem.content,
+              mimetype: 'image/jpeg'
+            }, { quoted: msg });
+          } else {
+            await sock.sendMessage(sender, { text: listItem.content }, { quoted: msg });
+          }
+          
+          return;
+        }
       }
     } catch (error) {
       logger.error('Gagal memproses list:', error);
@@ -497,7 +522,14 @@ const messageHandler = async (sock, msg) => {
           }
           
           let listMessage = '📋 *DAFTAR LIST*\n\n';
-          Object.keys(listDb[sender]).forEach((item, index) => {
+          
+          // Dapatkan semua kunci (nama list) dan urutkan secara alfabetis (A-Z)
+          const sortedKeys = Object.keys(listDb[sender]).sort((a, b) => 
+            a.localeCompare(b, 'id', { sensitivity: 'base' })
+          );
+          
+          // Tampilkan list yang sudah diurutkan
+          sortedKeys.forEach((item, index) => {
             listMessage += `${index + 1}. ${item}\n`;
           });
           
@@ -703,533 +735,533 @@ const messageHandler = async (sock, msg) => {
         }
         break;
         
-      case 'antilink':
-        {
-          // Hanya owner dan admin yang bisa menggunakan antilink
-          if (!isAdmin && !isOwnerMsg && isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!content) {
-            await sock.sendMessage(sender, {
-              text: '❌ *FORMAT SALAH*\n\nGunakan format: antilink on/off'
-            }, { quoted: msg });
-            return;
-          }
-          
-          const option = content.toLowerCase();
-          
-          if (option !== 'on' && option !== 'off') {
-            await sock.sendMessage(sender, {
-              text: '❌ *FORMAT SALAH*\n\nGunakan format: antilink on/off'
-            }, { quoted: msg });
-            return;
-          }
-          
-          // Muat pengaturan grup
-          const groupSettings = loadGroupSettings();
-          
-          // Buat objek untuk grup jika belum ada
-          if (!groupSettings[sender]) {
-            groupSettings[sender] = {};
-          }
-          
-          // Update pengaturan antilink
-          groupSettings[sender].antilink = (option === 'on');
-          
-          saveGroupSettings(groupSettings);
-          
-          await sock.sendMessage(sender, {
-            text: `✅ *ANTILINK ${option.toUpperCase()}*\n\nAntilink telah ${option === 'on' ? 'diaktifkan' : 'dinonaktifkan'} di grup ini.`
-          }, { quoted: msg });
-        }
-        break;
-        
-      case 'add':
-        {
-          // Hanya owner dan admin yang bisa menambah member
-          if (!isAdmin && !isOwnerMsg && isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!content) {
-            await sock.sendMessage(sender, {
-              text: '❌ *FORMAT SALAH*\n\nGunakan format: add nomor_telepon'
-            }, { quoted: msg });
-            return;
-          }
-          
-          // Normalisasi nomor telepon
-          let number = normalizePhoneNumber(content);
-          
-          // Jika terjadi reply message, cek apakah ada nomor telepon di pesan yang direply
-          if (msg.message.extendedTextMessage && msg.message.extendedTextMessage.contextInfo && 
-              msg.message.extendedTextMessage.contextInfo.quotedMessage) {
-            const quotedMsg = msg.message.extendedTextMessage.contextInfo.quotedMessage;
-            
-            if (quotedMsg.conversation) {
-              // Cek apakah pesan yang direply berisi nomor telepon
-              const numberMatch = quotedMsg.conversation.match(/(\d+)/g);
-              
-              if (numberMatch) {
-                number = normalizePhoneNumber(numberMatch[0]);
-              }
+        case 'antilink':
+          {
+            // Hanya owner dan admin yang bisa menggunakan antilink
+            if (!isAdmin && !isOwnerMsg && isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
+              }, { quoted: msg });
+              return;
             }
-          }
-          
-          if (!number.endsWith('@s.whatsapp.net')) {
-            number = number + '@s.whatsapp.net';
-          }
-          
-          try {
-            await sock.groupParticipantsUpdate(sender, [number], 'add');
-            await sock.sendMessage(sender, {
-              text: `✅ *MEMBER BERHASIL DITAMBAHKAN*\n\nBerhasil menambahkan nomor ${formatPhoneNumber(number)} ke dalam grup.`
-            }, { quoted: msg });
-          } catch (error) {
-            logger.error('Gagal menambahkan member:', error);
-            await sock.sendMessage(sender, {
-              text: `❌ *GAGAL MENAMBAHKAN MEMBER*\n\nTerjadi kesalahan saat menambahkan member. Pastikan nomor valid dan belum bergabung ke grup.`
-            }, { quoted: msg });
-          }
-        }
-        break;
-        
-      case 'h':
-      case 'hidetag':
-        {
-          // Hanya owner dan admin yang bisa hidetag
-          if (!isAdmin && !isOwnerMsg && isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!content) {
-            await sock.sendMessage(sender, {
-              text: '❌ *FORMAT SALAH*\n\nGunakan format: hidetag pesan'
-            }, { quoted: msg });
-            return;
-          }
-          
-          const groupMembers = groupMetadata.participants;
-          const mentionList = groupMembers.map(member => member.id);
-          
-          await sock.sendMessage(sender, {
-            text: content,
-            mentions: mentionList
-          }, { quoted: msg });
-        }
-        break;
-        
-      case 'kick':
-        {
-          // Hanya owner dan admin yang bisa kick member
-          if (!isAdmin && !isOwnerMsg && isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          let target;
-          
-          // Jika pesan mereply ke pesan lain
-          if (msg.message.extendedTextMessage && msg.message.extendedTextMessage.contextInfo && 
-              msg.message.extendedTextMessage.contextInfo.participant) {
-            target = msg.message.extendedTextMessage.contextInfo.participant;
-          } 
-          // Jika pesan tidak mereply tapi ada argumen nomor telepon
-          else if (content) {
-            target = normalizePhoneNumber(content);
             
-            if (!target.endsWith('@s.whatsapp.net')) {
-              target = target + '@s.whatsapp.net';
+            if (!isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
+              }, { quoted: msg });
+              return;
             }
-          } else {
-            await sock.sendMessage(sender, {
-              text: '❌ *FORMAT SALAH*\n\nGunakan format: kick @tag atau reply pesan dengan ketik kick'
-            }, { quoted: msg });
-            return;
-          }
-          
-          // Pastikan tidak menendang diri sendiri atau bot
-          if (target === botNumber || target === senderId) {
-            await sock.sendMessage(sender, {
-              text: '❌ *TIDAK DAPAT MENENDANG*\n\nTidak dapat menendang diri sendiri atau bot!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          try {
-            await sock.groupParticipantsUpdate(sender, [target], 'remove');
-            await sock.sendMessage(sender, {
-              text: `✅ *MEMBER BERHASIL DIKELUARKAN*\n\nBerhasil mengeluarkan member dari grup.`
-            }, { quoted: msg });
-          } catch (error) {
-            logger.error('Gagal mengeluarkan member:', error);
-            await sock.sendMessage(sender, {
-              text: `❌ *GAGAL MENGELUARKAN MEMBER*\n\nTerjadi kesalahan saat mengeluarkan member. Pastikan nomor valid dan ada di dalam grup.`
-            }, { quoted: msg });
-          }
-        }
-        break;
-        
-      case 's':
-      case 'stiker':
-        {
-          if (!msgType.includes('image') && !msgType.includes('video') && 
-              !(msg.message.extendedTextMessage && 
-                msg.message.extendedTextMessage.contextInfo && 
-                msg.message.extendedTextMessage.contextInfo.quotedMessage)) {
-            await sock.sendMessage(sender, {
-              text: '❌ *FORMAT SALAH*\n\nKirim gambar dengan caption s atau stiker, atau reply gambar dengan ketik s atau stiker'
-            }, { quoted: msg });
-            return;
-          }
-          
-          try {
-            // Menampilkan pesan sedang membuat stiker
-            await sock.sendMessage(sender, {
-              text: '⏳ *SEDANG MEMBUAT STIKER*\n\nMohon tunggu sebentar...'
-            }, { quoted: msg });
             
-            let buffer;
+            if (!content) {
+              await sock.sendMessage(sender, {
+                text: '❌ *FORMAT SALAH*\n\nGunakan format: antilink on/off'
+              }, { quoted: msg });
+              return;
+            }
             
-            // Jika pesan berupa gambar/video dengan caption
-            if (msgType.includes('image') || msgType.includes('video')) {
-              const stream = await downloadContentFromMessage(
-                msgType === 'imageMessage' ? msg.message.imageMessage : msg.message.videoMessage,
-                msgType === 'imageMessage' ? 'image' : 'video'
-              );
-              
-              buffer = Buffer.from([]);
-              for await (const chunk of stream) {
-                buffer = Buffer.concat([buffer, chunk]);
-              }
-            } 
-            // Jika pesan mereply ke media
-            else if (msg.message.extendedTextMessage && 
-                     msg.message.extendedTextMessage.contextInfo && 
-                     msg.message.extendedTextMessage.contextInfo.quotedMessage) {
-                       
+            const option = content.toLowerCase();
+            
+            if (option !== 'on' && option !== 'off') {
+              await sock.sendMessage(sender, {
+                text: '❌ *FORMAT SALAH*\n\nGunakan format: antilink on/off'
+              }, { quoted: msg });
+              return;
+            }
+            
+            // Muat pengaturan grup
+            const groupSettings = loadGroupSettings();
+            
+            // Buat objek untuk grup jika belum ada
+            if (!groupSettings[sender]) {
+              groupSettings[sender] = {};
+            }
+            
+            // Update pengaturan antilink
+            groupSettings[sender].antilink = (option === 'on');
+            
+            saveGroupSettings(groupSettings);
+            
+            await sock.sendMessage(sender, {
+              text: `✅ *ANTILINK ${option.toUpperCase()}*\n\nAntilink telah ${option === 'on' ? 'diaktifkan' : 'dinonaktifkan'} di grup ini.`
+            }, { quoted: msg });
+          }
+          break;
+          
+        case 'add':
+          {
+            // Hanya owner dan admin yang bisa menambah member
+            if (!isAdmin && !isOwnerMsg && isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            if (!isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            if (!content) {
+              await sock.sendMessage(sender, {
+                text: '❌ *FORMAT SALAH*\n\nGunakan format: add nomor_telepon'
+              }, { quoted: msg });
+              return;
+            }
+            
+            // Normalisasi nomor telepon
+            let number = normalizePhoneNumber(content);
+            
+            // Jika terjadi reply message, cek apakah ada nomor telepon di pesan yang direply
+            if (msg.message.extendedTextMessage && msg.message.extendedTextMessage.contextInfo && 
+                msg.message.extendedTextMessage.contextInfo.quotedMessage) {
               const quotedMsg = msg.message.extendedTextMessage.contextInfo.quotedMessage;
-              const quotedType = getContentType(quotedMsg);
               
-              if (quotedType.includes('image') || quotedType.includes('video')) {
+              if (quotedMsg.conversation) {
+                // Cek apakah pesan yang direply berisi nomor telepon
+                const numberMatch = quotedMsg.conversation.match(/(\d+)/g);
+                
+                if (numberMatch) {
+                  number = normalizePhoneNumber(numberMatch[0]);
+                }
+              }
+            }
+            
+            if (!number.endsWith('@s.whatsapp.net')) {
+              number = number + '@s.whatsapp.net';
+            }
+            
+            try {
+              await sock.groupParticipantsUpdate(sender, [number], 'add');
+              await sock.sendMessage(sender, {
+                text: `✅ *MEMBER BERHASIL DITAMBAHKAN*\n\nBerhasil menambahkan nomor ${formatPhoneNumber(number)} ke dalam grup.`
+              }, { quoted: msg });
+            } catch (error) {
+              logger.error('Gagal menambahkan member:', error);
+              await sock.sendMessage(sender, {
+                text: `❌ *GAGAL MENAMBAHKAN MEMBER*\n\nTerjadi kesalahan saat menambahkan member. Pastikan nomor valid dan belum bergabung ke grup.`
+              }, { quoted: msg });
+            }
+          }
+          break;
+          
+        case 'h':
+        case 'hidetag':
+          {
+            // Hanya owner dan admin yang bisa hidetag
+            if (!isAdmin && !isOwnerMsg && isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            if (!isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            if (!content) {
+              await sock.sendMessage(sender, {
+                text: '❌ *FORMAT SALAH*\n\nGunakan format: hidetag pesan'
+              }, { quoted: msg });
+              return;
+            }
+            
+            const groupMembers = groupMetadata.participants;
+            const mentionList = groupMembers.map(member => member.id);
+            
+            await sock.sendMessage(sender, {
+              text: content,
+              mentions: mentionList
+            }, { quoted: msg });
+          }
+          break;
+          
+        case 'kick':
+          {
+            // Hanya owner dan admin yang bisa kick member
+            if (!isAdmin && !isOwnerMsg && isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            if (!isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            let target;
+            
+            // Jika pesan mereply ke pesan lain
+            if (msg.message.extendedTextMessage && msg.message.extendedTextMessage.contextInfo && 
+                msg.message.extendedTextMessage.contextInfo.participant) {
+              target = msg.message.extendedTextMessage.contextInfo.participant;
+            } 
+            // Jika pesan tidak mereply tapi ada argumen nomor telepon
+            else if (content) {
+              target = normalizePhoneNumber(content);
+              
+              if (!target.endsWith('@s.whatsapp.net')) {
+                target = target + '@s.whatsapp.net';
+              }
+            } else {
+              await sock.sendMessage(sender, {
+                text: '❌ *FORMAT SALAH*\n\nGunakan format: kick @tag atau reply pesan dengan ketik kick'
+              }, { quoted: msg });
+              return;
+            }
+            
+            // Pastikan tidak menendang diri sendiri atau bot
+            if (target === botNumber || target === senderId) {
+              await sock.sendMessage(sender, {
+                text: '❌ *TIDAK DAPAT MENENDANG*\n\nTidak dapat menendang diri sendiri atau bot!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            try {
+              await sock.groupParticipantsUpdate(sender, [target], 'remove');
+              await sock.sendMessage(sender, {
+                text: `✅ *MEMBER BERHASIL DIKELUARKAN*\n\nBerhasil mengeluarkan member dari grup.`
+              }, { quoted: msg });
+            } catch (error) {
+              logger.error('Gagal mengeluarkan member:', error);
+              await sock.sendMessage(sender, {
+                text: `❌ *GAGAL MENGELUARKAN MEMBER*\n\nTerjadi kesalahan saat mengeluarkan member. Pastikan nomor valid dan ada di dalam grup.`
+              }, { quoted: msg });
+            }
+          }
+          break;
+          
+        case 's':
+        case 'stiker':
+          {
+            if (!msgType.includes('image') && !msgType.includes('video') && 
+                !(msg.message.extendedTextMessage && 
+                  msg.message.extendedTextMessage.contextInfo && 
+                  msg.message.extendedTextMessage.contextInfo.quotedMessage)) {
+              await sock.sendMessage(sender, {
+                text: '❌ *FORMAT SALAH*\n\nKirim gambar dengan caption s atau stiker, atau reply gambar dengan ketik s atau stiker'
+              }, { quoted: msg });
+              return;
+            }
+            
+            try {
+              // Menampilkan pesan sedang membuat stiker
+              await sock.sendMessage(sender, {
+                text: '⏳ *SEDANG MEMBUAT STIKER*\n\nMohon tunggu sebentar...'
+              }, { quoted: msg });
+              
+              let buffer;
+              
+              // Jika pesan berupa gambar/video dengan caption
+              if (msgType.includes('image') || msgType.includes('video')) {
                 const stream = await downloadContentFromMessage(
-                  quotedType === 'imageMessage' ? quotedMsg.imageMessage : quotedMsg.videoMessage,
-                  quotedType === 'imageMessage' ? 'image' : 'video'
+                  msgType === 'imageMessage' ? msg.message.imageMessage : msg.message.videoMessage,
+                  msgType === 'imageMessage' ? 'image' : 'video'
                 );
                 
                 buffer = Buffer.from([]);
                 for await (const chunk of stream) {
                   buffer = Buffer.concat([buffer, chunk]);
                 }
-              } else {
-                await sock.sendMessage(sender, {
-                  text: '❌ *MEDIA TIDAK DIDUKUNG*\n\nHanya gambar dan video yang dapat dikonversi menjadi stiker.'
-                }, { quoted: msg });
-                return;
+              } 
+              // Jika pesan mereply ke media
+              else if (msg.message.extendedTextMessage && 
+                       msg.message.extendedTextMessage.contextInfo && 
+                       msg.message.extendedTextMessage.contextInfo.quotedMessage) {
+                         
+                const quotedMsg = msg.message.extendedTextMessage.contextInfo.quotedMessage;
+                const quotedType = getContentType(quotedMsg);
+                
+                if (quotedType.includes('image') || quotedType.includes('video')) {
+                  const stream = await downloadContentFromMessage(
+                    quotedType === 'imageMessage' ? quotedMsg.imageMessage : quotedMsg.videoMessage,
+                    quotedType === 'imageMessage' ? 'image' : 'video'
+                  );
+                  
+                  buffer = Buffer.from([]);
+                  for await (const chunk of stream) {
+                    buffer = Buffer.concat([buffer, chunk]);
+                  }
+                } else {
+                  await sock.sendMessage(sender, {
+                    text: '❌ *MEDIA TIDAK DIDUKUNG*\n\nHanya gambar dan video yang dapat dikonversi menjadi stiker.'
+                  }, { quoted: msg });
+                  return;
+                }
               }
-            }
-            
-            // Jika buffer berhasil didapat, konversi ke stiker
-            if (buffer && buffer.length > 0) {
-              await sock.sendMessage(sender, { 
-                sticker: buffer
+              
+              // Jika buffer berhasil didapat, konversi ke stiker
+              if (buffer && buffer.length > 0) {
+                await sock.sendMessage(sender, { 
+                  sticker: buffer
+                }, { quoted: msg });
+              } else {
+                throw new Error('Buffer kosong');
+              }
+              
+            } catch (error) {
+              logger.error('Gagal membuat stiker:', error);
+              await sock.sendMessage(sender, {
+                text: `❌ *GAGAL MEMBUAT STIKER*\n\nTerjadi kesalahan saat membuat stiker.`
               }, { quoted: msg });
-            } else {
-              throw new Error('Buffer kosong');
+            }
+          }
+          break;
+          
+        case 'linkgc':
+          {
+            if (!isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
+              }, { quoted: msg });
+              return;
             }
             
-          } catch (error) {
-            logger.error('Gagal membuat stiker:', error);
-            await sock.sendMessage(sender, {
-              text: `❌ *GAGAL MEMBUAT STIKER*\n\nTerjadi kesalahan saat membuat stiker.`
-            }, { quoted: msg });
-          }
-        }
-        break;
-        
-      case 'linkgc':
-        {
-          if (!isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          try {
-            const groupCode = await sock.groupInviteCode(sender);
-            const groupName = groupMetadata.subject;
-            const groupLink = `https://chat.whatsapp.com/${groupCode}`;
-            
-            await sock.sendMessage(sender, {
-              text: `📢 *LINK GROUP*\n\n*Nama Grup:* ${groupName}\n*Link:* ${groupLink}`
-            }, { quoted: msg });
-          } catch (error) {
-            logger.error('Gagal mendapatkan link grup:', error);
-            await sock.sendMessage(sender, {
-              text: `❌ *GAGAL MENDAPATKAN LINK*\n\nTerjadi kesalahan saat mendapatkan link grup.`
-            }, { quoted: msg });
-          }
-        }
-        break;
-        
-      case 'open':
-        {
-          // Hanya owner dan admin yang bisa open grup
-          if (!isAdmin && !isOwnerMsg && isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          try {
-            await sock.groupSettingUpdate(sender, 'not_announcement');
-            await sock.sendMessage(sender, {
-              text: '🔓 *GRUP DIBUKA*\n\nSekarang semua member dapat mengirim pesan di grup ini.'
-            }, { quoted: msg });
-          } catch (error) {
-            logger.error('Gagal membuka grup:', error);
-            await sock.sendMessage(sender, {
-              text: `❌ *GAGAL MEMBUKA GRUP*\n\nTerjadi kesalahan saat membuka grup.`
-            }, { quoted: msg });
-          }
-        }
-        break;
-        
-      case 'close':
-        {
-          // Hanya owner dan admin yang bisa close grup
-          if (!isAdmin && !isOwnerMsg && isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          if (!isGroupMsg) {
-            await sock.sendMessage(sender, {
-              text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
-            }, { quoted: msg });
-            return;
-          }
-          
-          try {
-            await sock.groupSettingUpdate(sender, 'announcement');
-            await sock.sendMessage(sender, {
-              text: '🔒 *GRUP DITUTUP*\n\nSekarang hanya admin yang dapat mengirim pesan di grup ini.'
-            }, { quoted: msg });
-          } catch (error) {
-            logger.error('Gagal menutup grup:', error);
-            await sock.sendMessage(sender, {
-              text: `❌ *GAGAL MENUTUP GRUP*\n\nTerjadi kesalahan saat menutup grup.`
-            }, { quoted: msg });
-          }
-        }
-        break;
-        
-      case 'menu':
-        {
-          try {
-            // Menggunakan file lokal untuk logo
-            const logoPath = config.logoPath;
-            if (!fs.existsSync(logoPath)) {
-              throw new Error('File logo tidak ditemukan di ' + logoPath);
+            try {
+              const groupCode = await sock.groupInviteCode(sender);
+              const groupName = groupMetadata.subject;
+              const groupLink = `https://chat.whatsapp.com/${groupCode}`;
+              
+              await sock.sendMessage(sender, {
+                text: `📢 *LINK GROUP*\n\n*Nama Grup:* ${groupName}\n*Link:* ${groupLink}`
+              }, { quoted: msg });
+            } catch (error) {
+              logger.error('Gagal mendapatkan link grup:', error);
+              await sock.sendMessage(sender, {
+                text: `❌ *GAGAL MENDAPATKAN LINK*\n\nTerjadi kesalahan saat mendapatkan link grup.`
+              }, { quoted: msg });
             }
-
+          }
+          break;
+          
+        case 'open':
+          {
+            // Hanya owner dan admin yang bisa open grup
+            if (!isAdmin && !isOwnerMsg && isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            if (!isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            try {
+              await sock.groupSettingUpdate(sender, 'not_announcement');
+              await sock.sendMessage(sender, {
+                text: '🔓 *GRUP DIBUKA*\n\nSekarang semua member dapat mengirim pesan di grup ini.'
+              }, { quoted: msg });
+            } catch (error) {
+              logger.error('Gagal membuka grup:', error);
+              await sock.sendMessage(sender, {
+                text: `❌ *GAGAL MEMBUKA GRUP*\n\nTerjadi kesalahan saat membuka grup.`
+              }, { quoted: msg });
+            }
+          }
+          break;
+          
+        case 'close':
+          {
+            // Hanya owner dan admin yang bisa close grup
+            if (!isAdmin && !isOwnerMsg && isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya dapat digunakan oleh admin grup dan owner bot!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            if (!isGroupMsg) {
+              await sock.sendMessage(sender, {
+                text: '❌ *GAGAL*\n\nPerintah ini hanya bisa digunakan di dalam grup!'
+              }, { quoted: msg });
+              return;
+            }
+            
+            try {
+              await sock.groupSettingUpdate(sender, 'announcement');
+              await sock.sendMessage(sender, {
+                text: '🔒 *GRUP DITUTUP*\n\nSekarang hanya admin yang dapat mengirim pesan di grup ini.'
+              }, { quoted: msg });
+            } catch (error) {
+              logger.error('Gagal menutup grup:', error);
+              await sock.sendMessage(sender, {
+                text: `❌ *GAGAL MENUTUP GRUP*\n\nTerjadi kesalahan saat menutup grup.`
+              }, { quoted: msg });
+            }
+          }
+          break;
+          
+        case 'menu':
+          {
+            try {
+              // Menggunakan file lokal untuk logo
+              const logoPath = config.logoPath;
+              if (!fs.existsSync(logoPath)) {
+                throw new Error('File logo tidak ditemukan di ' + logoPath);
+              }
+  
+              await sock.sendMessage(sender, {
+                image: fs.readFileSync(logoPath), // Membaca file lokal
+                caption: `
+  🤖 *${config.name} MENU* 🤖
+  
+  👨‍💻 *Owner Bot:* ${config.owner.name}
+  📱 *Nomor Owner:* ${config.owner.numberWithoutPrefix}
+  
+  *DAFTAR PERINTAH:*
+  
+  👤 *owner*
+  - Menampilkan biodata owner bot
+  
+  📝 *addlist* _nama|isi_
+  - Menambahkan list ke database (Admin/Owner)
+  
+  📋 *list*
+  - Menampilkan semua list yang tersimpan
+  
+  🗑️ *dellist* _nama_
+  - Menghapus list dari database (Admin/Owner)
+  
+  ✏️ *updatelist* _nama|isi_baru_
+  - Mengupdate isi list yang ada (Admin/Owner)
+  
+  📝 *renamelist* _nama_lama|nama_baru_
+  - Mengganti nama list (Admin/Owner)
+  
+  🔗 *antilink* _on/off_
+  - Mengaktifkan/menonaktifkan anti-link (Admin/Owner)
+  
+  ➕ *add* _nomor_
+  - Menambahkan member ke grup (Admin/Owner)
+  
+  📢 *h* atau *hidetag* _pesan_
+  - Mengirim pesan mention ke semua member (Admin/Owner)
+  
+  ⛔ *kick* _@tag_
+  - Mengeluarkan member dari grup (Admin/Owner)
+  
+  🖼️ *s* atau *stiker*
+  - Membuat stiker dari gambar/video
+  
+  🔗 *linkgc*
+  - Menampilkan link invite grup
+  
+  🔓 *open*
+  - Membuka grup agar semua member bisa chat (Admin/Owner)
+  
+  🔒 *close*
+  - Menutup grup agar hanya admin bisa chat (Admin/Owner)
+  
+  📜 *menu*
+  - Menampilkan daftar perintah bot
+  
+  *NOTE:*
+  Semua perintah bisa digunakan dengan atau tanpa prefix "."
+  Contoh: .menu atau menu
+  
+  © 2025 ${config.name} - Dibuat dengan ❤️ oleh ${config.owner.name}
+                `
+              }, { quoted: msg });
+            } catch (error) {
+              logger.error('Gagal menampilkan menu dengan logo:', error);
+              // Fallback jika gambar gagal dimuat
+              await sock.sendMessage(sender, {
+                text: `
+  🤖 *${config.name} MENU* 🤖
+  
+  👨‍💻 *Owner Bot:* ${config.owner.name}
+  📱 *Nomor Owner:* ${config.owner.numberWithoutPrefix}
+  
+  *DAFTAR PERINTAH:*
+  
+  👤 *owner*
+  - Menampilkan biodata owner bot
+  
+  📝 *addlist* _nama|isi_
+  - Menambahkan list ke database (Admin/Owner)
+  
+  📋 *list*
+  - Menampilkan semua list yang tersimpan
+  
+  🗑️ *dellist* _nama_
+  - Menghapus list dari database (Admin/Owner)
+  
+  ✏️ *updatelist* _nama|isi_baru_
+  - Mengupdate isi list yang ada (Admin/Owner)
+  
+  📝 *renamelist* _nama_lama|nama_baru_
+  - Mengganti nama list (Admin/Owner)
+  
+  🔗 *antilink* _on/off_
+  - Mengaktifkan/menonaktifkan anti-link (Admin/Owner)
+  
+  ➕ *add* _nomor_
+  - Menambahkan member ke grup (Admin/Owner)
+  
+  📢 *h* atau *hidetag* _pesan_
+  - Mengirim pesan mention ke semua member (Admin/Owner)
+  
+  ⛔ *kick* _@tag_
+  - Mengeluarkan member dari grup (Admin/Owner)
+  
+  🖼️ *s* atau *stiker*
+  - Membuat stiker dari gambar/video
+  
+  🔗 *linkgc*
+  - Menampilkan link invite grup
+  
+  🔓 *open*
+  - Membuka grup agar semua member bisa chat (Admin/Owner)
+  
+  🔒 *close*
+  - Menutup grup agar hanya admin bisa chat (Admin/Owner)
+  
+  📜 *menu*
+  - Menampilkan daftar perintah bot
+  
+  *NOTE:*
+  Semua perintah bisa digunakan dengan atau tanpa prefix "."
+  Contoh: .menu atau menu
+  
+  © 2025 ${config.name} - Dibuat dengan ❤️ oleh ${config.owner.name}
+                `
+              }, { quoted: msg });
+            }
+          }
+          break;
+          
+        default:
+          // Jika tidak ada perintah yang cocok dan pesan dimulai dengan prefix
+          if (isCmd) {
             await sock.sendMessage(sender, {
-              image: fs.readFileSync(logoPath), // Membaca file lokal
-              caption: `
-🤖 *${config.name} MENU* 🤖
-
-👨‍💻 *Owner Bot:* ${config.owner.name}
-📱 *Nomor Owner:* ${config.owner.numberWithoutPrefix}
-
-*DAFTAR PERINTAH:*
-
-👤 *owner*
-- Menampilkan biodata owner bot
-
-📝 *addlist* _nama|isi_
-- Menambahkan list ke database (Admin/Owner)
-
-📋 *list*
-- Menampilkan semua list yang tersimpan
-
-🗑️ *dellist* _nama_
-- Menghapus list dari database (Admin/Owner)
-
-✏️ *updatelist* _nama|isi_baru_
-- Mengupdate isi list yang ada (Admin/Owner)
-
-📝 *renamelist* _nama_lama|nama_baru_
-- Mengganti nama list (Admin/Owner)
-
-🔗 *antilink* _on/off_
-- Mengaktifkan/menonaktifkan anti-link (Admin/Owner)
-
-➕ *add* _nomor_
-- Menambahkan member ke grup (Admin/Owner)
-
-📢 *h* atau *hidetag* _pesan_
-- Mengirim pesan mention ke semua member (Admin/Owner)
-
-⛔ *kick* _@tag_
-- Mengeluarkan member dari grup (Admin/Owner)
-
-🖼️ *s* atau *stiker*
-- Membuat stiker dari gambar/video
-
-🔗 *linkgc*
-- Menampilkan link invite grup
-
-🔓 *open*
-- Membuka grup agar semua member bisa chat (Admin/Owner)
-
-🔒 *close*
-- Menutup grup agar hanya admin bisa chat (Admin/Owner)
-
-📜 *menu*
-- Menampilkan daftar perintah bot
-
-*NOTE:*
-Semua perintah bisa digunakan dengan atau tanpa prefix "."
-Contoh: .menu atau menu
-
-© 2025 ${config.name} - Dibuat dengan ❤️ oleh ${config.owner.name}
-              `
-            }, { quoted: msg });
-          } catch (error) {
-            logger.error('Gagal menampilkan menu dengan logo:', error);
-            // Fallback jika gambar gagal dimuat
-            await sock.sendMessage(sender, {
-              text: `
-🤖 *${config.name} MENU* 🤖
-
-👨‍💻 *Owner Bot:* ${config.owner.name}
-📱 *Nomor Owner:* ${config.owner.numberWithoutPrefix}
-
-*DAFTAR PERINTAH:*
-
-👤 *owner*
-- Menampilkan biodata owner bot
-
-📝 *addlist* _nama|isi_
-- Menambahkan list ke database (Admin/Owner)
-
-📋 *list*
-- Menampilkan semua list yang tersimpan
-
-🗑️ *dellist* _nama_
-- Menghapus list dari database (Admin/Owner)
-
-✏️ *updatelist* _nama|isi_baru_
-- Mengupdate isi list yang ada (Admin/Owner)
-
-📝 *renamelist* _nama_lama|nama_baru_
-- Mengganti nama list (Admin/Owner)
-
-🔗 *antilink* _on/off_
-- Mengaktifkan/menonaktifkan anti-link (Admin/Owner)
-
-➕ *add* _nomor_
-- Menambahkan member ke grup (Admin/Owner)
-
-📢 *h* atau *hidetag* _pesan_
-- Mengirim pesan mention ke semua member (Admin/Owner)
-
-⛔ *kick* _@tag_
-- Mengeluarkan member dari grup (Admin/Owner)
-
-🖼️ *s* atau *stiker*
-- Membuat stiker dari gambar/video
-
-🔗 *linkgc*
-- Menampilkan link invite grup
-
-🔓 *open*
-- Membuka grup agar semua member bisa chat (Admin/Owner)
-
-🔒 *close*
-- Menutup grup agar hanya admin bisa chat (Admin/Owner)
-
-📜 *menu*
-- Menampilkan daftar perintah bot
-
-*NOTE:*
-Semua perintah bisa digunakan dengan atau tanpa prefix "."
-Contoh: .menu atau menu
-
-© 2025 ${config.name} - Dibuat dengan ❤️ oleh ${config.owner.name}
-              `
+              text: `❌ *PERINTAH TIDAK DIKENAL*\n\nKetik ${config.prefix}menu atau menu untuk melihat daftar perintah.`
             }, { quoted: msg });
           }
-        }
-        break;
-        
-      default:
-        // Jika tidak ada perintah yang cocok dan pesan dimulai dengan prefix
-        if (isCmd) {
-          await sock.sendMessage(sender, {
-            text: `❌ *PERINTAH TIDAK DIKENAL*\n\nKetik ${config.prefix}menu atau menu untuk melihat daftar perintah.`
-          }, { quoted: msg });
-        }
-        break;
+          break;
+      }
+    } catch (error) {
+      logger.error('Terjadi kesalahan saat memproses perintah:', error);
     }
-  } catch (error) {
-    logger.error('Terjadi kesalahan saat memproses perintah:', error);
-  }
-};
-
-// Mulai bot
-console.log('Memulai Bot WhatsApp...');
-startBot().catch(err => {
-  logger.error('Terjadi kesalahan fatal saat memulai bot:', err);
-});
+  };
+  
+  // Mulai bot
+  console.log('Memulai Bot WhatsApp...');
+  startBot().catch(err => {
+    logger.error('Terjadi kesalahan fatal saat memulai bot:', err);
+  });

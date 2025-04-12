@@ -35,7 +35,7 @@ sudo apt install -y git curl wget ffmpeg imagemagick webp nodejs npm
 
 ```bash
 # Clone repository
-git clone https://github.com/username/wa-bot-store.git
+git clone https://github.com/SCxVBS/wa-bot-store.git
 cd wa-bot-store
 
 # Atau jika mengunduh langsung
