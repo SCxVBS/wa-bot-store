@@ -1,6 +1,3 @@
-```markdown
-# WA-Bot Store
-
 # WA-Bot Store
 
 ![Made with Node.js](https://img.shields.io/badge/Made%20with-Node.js-43853d?style=for-the-badge&logo=node.js)
@@ -9,16 +6,17 @@
 [![Telegram Channel](https://img.shields.io/badge/Follow-Telegram-blue?style=for-the-badge&logo=telegram)](https://t.me/NamaChannel)
 [![WhatsApp Channel](https://img.shields.io/badge/Follow-WhatsApp-25D366?style=for-the-badge&logo=whatsapp)](https://wa.me/1234567890)
 
-Bot WhatsApp sederhana dengan fitur lengkap untuk kebutuhan grup dan bisnis. Mendukung manajemen list, anti-link, stiker, dan administrasi grup.
+Bot WhatsApp sederhana dengan fitur lengkap untuk kebutuhan grup dan bisnis. Mendukung manajemen list,
 
 ## Fitur
 
-- 📋 **List/Produk**: Tambah, hapus, update, dan tampilkan list dengan gambar
-- 🛡️ **Anti-Link**: Hapus otomatis pesan berisi link
-- 👮‍♂️ **Manajemen Grup**: Add, kick, hidetag, buka/tutup grup
-- 🖼️ **Stiker**: Buat stiker dari gambar/video
-- 🔗 **Link Grup**: Dapatkan link dengan cepat
-- ⚙️ **Mendukung prefix atau tanpa prefix**
+- 📋 **List/Produk**: Tambah, hapus, update, dan tampilkan list dengan gambar  
+- 🛡️ **Anti-Link**: Hapus otomatis pesan berisi link  
+- 🛠 **Manajemen Grup**: Add, kick, hidetag, buka/tutup grup  
+- 🎨 **Stiker**: Buat stiker dari gambar/video  
+- 🔗 **Link Grup**: Dapatkan link dengan cepat  
+- 🧩 **Mendukung prefix atau tanpa prefix**
+
 
 ## Persyaratan
 
