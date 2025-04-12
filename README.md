@@ -1,11 +1,13 @@
 ```markdown
 # WA-Bot Store
 
+# WA-Bot Store
+
 ![Made with Node.js](https://img.shields.io/badge/Made%20with-Node.js-43853d?style=for-the-badge&logo=node.js)
 ![Baileys](https://img.shields.io/badge/Powered%20by-Baileys-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
-[![Telegram Channel](https://img.shields.io/badge/Follow-Telegram-blue.svg?style=for-the-badge&logo=telegram)](https://t.me/scxvbs)
-[![WhatsApp Channel](https://img.shields.io/badge/Follow-WhatsApp-25D366?style=for-the-badge&logo=whatsapp)](https://whatsapp.com/channel/0029VbAR1YL5EjxqhRhOzT3x)
+[![Telegram Channel](https://img.shields.io/badge/Follow-Telegram-blue?style=for-the-badge&logo=telegram)](https://t.me/NamaChannel)
+[![WhatsApp Channel](https://img.shields.io/badge/Follow-WhatsApp-25D366?style=for-the-badge&logo=whatsapp)](https://wa.me/1234567890)
 
 Bot WhatsApp sederhana dengan fitur lengkap untuk kebutuhan grup dan bisnis. Mendukung manajemen list, anti-link, stiker, dan administrasi grup.
 
