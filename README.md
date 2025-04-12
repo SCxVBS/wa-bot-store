@@ -1,170 +1,145 @@
+```markdown
 # WA-Bot Store
 
-Bot WhatsApp dengan fitur lengkap untuk kebutuhan grup dan bisnis. Bot ini mendukung berbagai fitur seperti manajemen produk/list, anti-link, stiker, dan administrasi grup.
+![Made with Node.js](https://img.shields.io/badge/Made%20with-Node.js-43853d?style=for-the-badge&logo=node.js)
+![Baileys](https://img.shields.io/badge/Powered%20by-Baileys-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+[![Telegram Channel](https://img.shields.io/badge/Follow-Telegram-blue.svg?style=for-the-badge&logo=telegram)](https://t.me/scxvbs)
+[![WhatsApp Channel](https://img.shields.io/badge/Follow-WhatsApp-25D366?style=for-the-badge&logo=whatsapp)](https://whatsapp.com/channel/0029VbAR1YL5EjxqhRhOzT3x)
+
+Bot WhatsApp sederhana dengan fitur lengkap untuk kebutuhan grup dan bisnis. Mendukung manajemen list, anti-link, stiker, dan administrasi grup.
 
 ## Fitur
 
-- 📋 **Manajemen List/Produk**: Tambah, hapus, update, dan tampilkan list produk dengan dukungan gambar
-- 🛡️ **Anti-Link**: Otomatis menghapus pesan berisi link (kecuali admin/owner)
+- 📋 **List/Produk**: Tambah, hapus, update, dan tampilkan list dengan gambar
+- 🛡️ **Anti-Link**: Hapus otomatis pesan berisi link
 - 👮‍♂️ **Manajemen Grup**: Add, kick, hidetag, buka/tutup grup
 - 🖼️ **Stiker**: Buat stiker dari gambar/video
-- 🔗 **Link Grup**: Dapatkan link grup dengan mudah
+- 🔗 **Link Grup**: Dapatkan link dengan cepat
 - ⚙️ **Mendukung prefix atau tanpa prefix**
 
 ## Persyaratan
 
-- VPS dengan OS Linux (Ubuntu/Debian direkomendasikan)
-- Node.js v16 atau lebih baru
-- Minimal RAM 1GB
+- VPS (Ubuntu/Debian)
+- Node.js v16+
+- RAM minimal 1GB
 - Koneksi internet stabil
-- Whatsapp yang terhubung ke nomor aktif
 
 ## Instalasi
 
-### 1. Persiapan Awal
+### 1. Persiapan
 
 ```bash
-# Update dan upgrade sistem
+# Update dan install dependencies
 sudo apt update && sudo apt upgrade -y
-
-# Install dependensi yang diperlukan
 sudo apt install -y git curl wget ffmpeg imagemagick webp nodejs npm
 ```
 
 ### 2. Clone Repository
 
 ```bash
-# Clone repository
+# Download script
 git clone https://github.com/SCxVBS/wa-bot-store.git
 cd wa-bot-store
-
-# Atau jika mengunduh langsung
-mkdir -p wa-bot-store && cd wa-bot-store
-# Lalu upload file script ke folder ini
 ```
 
-### 3. Install Dependensi
+### 3. Install Dependencies
 
 ```bash
-# Install dependensi
 npm install --legacy-peer-deps
 ```
 
-### 4. Konfigurasi Bot
+### 4. Konfigurasi
 
-Buka file `index.js` dan sesuaikan konfigurasi bot:
+Edit file `index.js`:
 
 ```javascript
-// Konfigurasi Bot
 const config = {
-  name: 'WA-Bot',          // Nama bot
+  name: 'WA-Bot',           // Nama bot
   owner: {
-    name: 'Nama Owner',    // Ganti dengan nama Anda
-    number: '62xxxxxxxxxx', // Format 62xxx (ganti dengan nomor Anda)
+    name: 'Nama Owner',     // Nama kamu
+    number: '62xxxxxxxxxx', // Format 62xxx
     numberWithoutPrefix: '08xxxxxxxxxx', // Format 0xxx
   },
-  prefix: '.',              // Prefix untuk perintah, tapi bot juga mendukung tanpa prefix
-  logoUrl: 'url_logo_anda', // URL gambar logo bot
+  prefix: '.',
+  logoPath: path.join(__dirname, 'assets', 'images', 'logo.jpg'), // Logo lokal
   sessionName: 'wabot-session',
 };
 ```
 
-### 5. Menjalankan Bot
+### 5. Jalankan Bot
 
 ```bash
-# Jalankan bot
 npm start
 ```
 
-Scan QR Code yang muncul di terminal dengan WhatsApp yang akan dijadikan bot.
+Scan QR Code yang muncul dengan WhatsApp.
 
-### 6. Menjalankan Bot di Background (agar tetap berjalan meski terminal ditutup)
+### 6. Jalankan di Background
 
 ```bash
-# Install PM2
 npm install -g pm2
-
-# Jalankan bot dengan PM2
 pm2 start index.js --name "wa-bot"
-
-# Memastikan bot berjalan saat sistem restart
 pm2 startup
 pm2 save
 ```
 
 ## Perintah Bot
 
-### Perintah Umum
+### Umum
 
 | Perintah | Fungsi |
 |----------|--------|
-| `.owner` | Menampilkan biodata owner bot |
-| `.list` | Menampilkan semua list yang tersimpan |
-| `.s` atau `.stiker` | Membuat stiker dari gambar/video |
-| `.linkgc` | Menampilkan link invite grup |
-| `.menu` | Menampilkan daftar perintah bot |
+| `.owner` | Info owner bot |
+| `.list` | Lihat semua list |
+| `.s` atau `.stiker` | Buat stiker |
+| `.linkgc` | Link invite grup |
+| `.menu` | Lihat semua perintah |
 
-### Perintah Admin/Owner
+### Admin/Owner
 
 | Perintah | Fungsi |
 |----------|--------|
-| `.addlist nama\|isi` | Menambahkan list ke database |
-| `.dellist nama` | Menghapus list dari database |
-| `.updatelist nama\|isi_baru` | Mengupdate isi list yang ada |
-| `.renamelist nama_lama\|nama_baru` | Mengganti nama list |
-| `.antilink on/off` | Mengaktifkan/menonaktifkan anti-link |
-| `.add nomor` | Menambahkan member ke grup |
-| `.h` atau `.hidetag pesan` | Mengirim pesan mention ke semua member |
-| `.kick @tag` | Mengeluarkan member dari grup |
-| `.open` | Membuka grup agar semua member bisa chat |
-| `.close` | Menutup grup agar hanya admin bisa chat |
+| `.addlist nama\|isi` | Tambah list baru |
+| `.dellist nama` | Hapus list |
+| `.updatelist nama\|isi_baru` | Update list |
+| `.renamelist nama_lama\|nama_baru` | Ganti nama list |
+| `.antilink on/off` | Atur anti-link |
+| `.add nomor` | Tambah member |
+| `.h` atau `.hidetag pesan` | Mention semua member |
+| `.kick @tag` | Keluarkan member |
+| `.open` | Buka grup |
+| `.close` | Tutup grup |
 
 ## Troubleshooting
 
-### Bot tidak bisa connect ke WhatsApp
-
-1. Hapus folder session:
+**Bot tidak connect:**
 ```bash
 rm -rf session
-```
-
-2. Restart bot:
-```bash
 npm start
 ```
 
-### Error module tidak ditemukan
-
+**Error module tidak ditemukan:**
 ```bash
 npm install --legacy-peer-deps
 ```
 
-### QR Code tidak muncul
-
-Periksa versi Node.js Anda:
+**QR Code tidak muncul:**
 ```bash
-node -v
-```
-
-Jika versi di bawah 16, update Node.js:
-```bash
+node -v  # Pastikan versi 16+
+# Update jika perlu:
 curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-## Catatan 
+## Kontak
 
-- Bot ini menggunakan library @whiskeysockets/baileys untuk terhubung ke WhatsApp
-- Disarankan menggunakan VPS dengan spesifikasi minimal 1GB RAM untuk performa optimal
-- Penggunaan bot WhatsApp harus mengikuti Terms of Service dari WhatsApp
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/scxvbs)
+[![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://whatsapp.com/channel/0029VbAR1YL5EjxqhRhOzT3x)
 
 ## Lisensi
 
 MIT License
-
-## Kontribusi
-
-Kontribusi selalu diterima. Silakan buat pull request atau buka issue untuk perbaikan atau penambahan fitur.
 
 ## Disclaimer
 
